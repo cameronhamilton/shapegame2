@@ -19,6 +19,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var previousUpperY = CGFloat(200)
     var previousLowerY = CGFloat(200)
     var playerSize = CGFloat(20)
+    var minOpeningSize: CGFloat!
     
     let playerCategory: UInt32 = 1 << 0
     let boundaryCategory: UInt32 = 1 << 2
@@ -36,6 +37,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         backgroundColor = SKColor.darkGray
         
+        minOpeningSize = playerSize * 1.5
         self.physicsWorld.gravity = CGVector( dx: 0.0, dy: -5.0)
         self.physicsWorld.contactDelegate = self
     }
@@ -58,10 +60,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         touchIndicator = SKShapeNode()
         touchIndicator.path = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: 30, height: 30)).cgPath
-        touchIndicator.fillColor = UIColor.lightGray
         touchIndicator.lineWidth = 0
         touchIndicator.alpha = 0
-        touchIndicator.zPosition = -1
+        touchIndicator.zPosition = 1
         addChild(touchIndicator)
     }
     
@@ -90,8 +91,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let boundaryPair = SKNode()
         let x = CGFloat(25)
-        let lowerY = previousLowerY * randomNumber(lower: 0.77, upper: 1.25)
-        let upperY = previousUpperY * randomNumber(lower: 0.77, upper: 1.25)
+        var lowerY = previousLowerY * randomNumber(lower: 0.76, upper: 1.25)
+        var upperY = previousUpperY * randomNumber(lower: 0.76, upper: 1.25)
+        
+        let randomAddYEvent = UInt32(randomNumber(lower: 0, upper: 20))
+        if (randomAddYEvent == 0) {
+            lowerY += 200
+        }
+        else if (randomAddYEvent == 1) {
+            upperY += 200
+        }
+        
+        if ((lowerY + upperY) > (self.frame.maxY - minOpeningSize)) {
+            
+            let overflow = (lowerY + upperY - (self.frame.maxY - minOpeningSize)) / 2
+            
+            lowerY = max(lowerY - overflow, 0)
+            upperY = max(upperY - overflow, 0)
+        }
+        
         previousLowerY = lowerY
         previousUpperY = upperY
         
@@ -129,7 +147,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         touchLocation.x -= (touchIndicator.path?.boundingBox.width)! * scale / 2
         touchLocation.y -= (touchIndicator.path?.boundingBox.width)! * scale / 2
         touchIndicator.position = touchLocation
-        touchIndicator.alpha = 1
+        
+        //let r = 255 * (touch.force / 6.7)
+        //let g = (255 * (max - scale)) / max
+        //let g = CGFloat(0.0)
+        //let b = CGFloat(0.0)
+        //touchIndicator.fillColor = UIColor(red: r, green: g, blue: b, alpha: 0.7)
+        touchIndicator.fillColor = .magenta
+        touchIndicator.alpha = 0.75
         
         self.player.physicsBody?.velocity = CGVector( dx: 0.0, dy: ((self.player.physicsBody?.velocity.dy)! + (touch.force * touch.force)))
     }
